@@ -1,0 +1,322 @@
+{{include './header.html'}}
+<style>
+    .layui-laypage a,
+    .layui-laypage span {
+        height: 10px;
+        line-height: 10px;
+    }
+</style>
+</head>
+
+<body>
+    <div class="x-nav">
+        <span class="layui-breadcrumb">
+        <a href="./admin">首页</a>
+        <a>
+          <cite>文章列表</cite></a>
+      </span>
+        <a class="layui-btn layui-btn-small" style="line-height:1.6em;margin-top:3px;float:right" href="javascript:location.replace(location.href);" title="刷新">
+            <i class="layui-icon" style="line-height:30px">ဂ</i></a>
+    </div>
+    <div class="x-body">
+        <div class="layui-row">
+            <form class="layui-form layui-col-md12 x-so">
+                <input class="layui-input" placeholder="开始日" name="start" id="start">
+                <input class="layui-input" placeholder="截止日" name="end" id="end">
+                <div class="layui-input-inline">
+                    <select name="type">
+                        <option value="">选择栏目</option>
+                        {{each classList as item}}
+                        <option value="{{@item._id}}">{{item.CateName}}</option>
+                        {{/each}}
+                     </select>
+                </div>
+                <input type="text" name="title" placeholder="请输入标题" autocomplete="off" class="layui-input">
+                <button id="search-btn" lay-submit="" class="layui-btn" lay-filter="sreach"><i class="layui-icon">&#xe615;</i></button>
+        </div>
+        </form>
+        <xblock>
+            <button class="layui-btn layui-btn-danger" onclick="delAll()"><i class="layui-icon"></i>批量删除</button>
+            <button class="layui-btn" onclick="x_admin_show('添加用户','/admin/article/add')"><i class="layui-icon"></i>添加</button>
+        </xblock>
+        <div class="layui-form">
+            <table class="layui-table">
+                <thead>
+                    <tr>
+                        <th>
+                            <div class="layui-unselect header layui-form-checkbox" lay-skin="primary"><i class="layui-icon">&#xe605;</i></div>
+                        </th>
+                        <th>栏目</th>
+                        <th>标题</th>
+                        <th>作者</th>
+                        <th>发布时间</th>
+                        <th>是否置顶</th>
+                        <th>阅读数</th>
+                        <th>tag</th>
+                        <th>状态</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="newsList"> </tbody>
+            </table>
+        </div>
+        <div class="page" id="j-page"></div>
+
+    </div>
+    <script>
+        var pageObj = {
+            page: 1,
+            size: 10,
+            total: 0,
+            start: '',
+            end: '',
+            type: '',
+            title: ''
+        }
+        var form;
+        layui.use(['laydate', 'laypage', 'form'], function() {
+            var laydate = layui.laydate;
+            var laypage = layui.laypage;
+            form = layui.form;
+            //执行一个laydate实例
+            laydate.render({
+                elem: '#start' //指定元素
+            });
+
+            //执行一个laydate实例
+            laydate.render({
+                elem: '#end' //指定元素
+            });
+            //获取用户数据
+            getFirst();
+            $('#j-search').on('click', function() {
+                var username = $('#j-user').val();
+                getList();
+            })
+
+            //搜索
+            //监听提交
+            form.on('submit(sreach)', function(data) {
+                pageObj.start = data.field.start;
+                pageObj.end = data.field.end;
+                pageObj.type = data.field.type;
+                pageObj.title = data.field.title;
+                getList();
+                return false;
+            });
+        });
+
+        function getList() {
+            $.ajax({
+                url: '/admin/article/getlist',
+                dataType: 'json',
+                type: 'post',
+                data: pageObj,
+                success: function(res) {
+                    if (res.code == 1) {
+                        pageObj.total = res.totle;
+                        setHtml(res.list);
+                    }
+                }
+            })
+        }
+
+        function getFirst() {
+            $.ajax({
+                url: '/admin/article/getlist',
+                dataType: 'json',
+                type: 'post',
+                data: pageObj,
+                success: function(res) {
+                    if (res.code == 1) {
+                        pageObj.total = res.totle;
+                        setHtml(res.list);
+
+                        //执行一个laypage实例
+                        layui.use('laypage', function() {
+                            var laypage = layui.laypage;
+                            laypage.render({
+                                elem: 'j-page' //注意，这里的 test1 是 ID，不用加 # 号
+                                    ,
+                                count: pageObj.total, //数据总数，从服务端得到
+                                limit: pageObj.size, //每页条数设置
+                                jump: function(obj, first) {
+                                    //obj包含了当前分页的所有参数，比如：
+                                    pageObj.page = obj.curr; //改变当前页码
+                                    limit = obj.limit;
+                                    //首次不执行
+                                    if (!first) {
+                                        getList(pageObj);
+                                    }
+                                }
+                            });
+                        });
+
+                    }
+                }
+            })
+        }
+
+
+
+        function setHtml(data) {
+            var strHtml = "";
+            if (data.length > 0) {
+                $.each(data, function(index, item) {
+                    var isDelDom = '';
+                    var ztDom = '';
+                    if (item.show) {
+                        ztDom += '<input type="checkbox" class="check-item" name="switch" lay-text="发布|停用" checked lay-skin="switch">'
+                    } else {
+                        ztDom += '<input type="checkbox" class="check-item" name="switch" lay-text="发布|停用" lay-skin="switch">'
+                    }
+                    var zdDom = '';
+                    if (item.digest) {
+                        zdDom += '<input type="checkbox" class="zd-item" name="switch" lay-text="置顶|否" checked lay-skin="switch">'
+                    } else {
+                        zdDom += '<input type="checkbox" class="zd-item" name="switch" lay-text="置顶|否" lay-skin="switch">'
+                    }
+
+
+                    isDelDom = '<a title="编辑" onclick="x_admin_show(\'编辑\',\'/admin/article/edit/' + item._id + '\',800,400)" href="javascript:;">\
+                                                    <i class="layui-icon">&#xe642;</i>\
+                                                </a>\
+                                                <a title="删除" onclick="member_del(this,\'' + item._id + '\')" href="javascript:;">\
+                                                    <i class="layui-icon">&#xe640;</i>\
+                                                </a>';
+
+                    strHtml += '<tr data-id=' + item._id + '>\
+                                            <td>\
+                                                <input type="checkbox" />\
+                                            </td>\
+                                            <td>' + item.cateName + '</td>\
+                                            <td>' + item.title + '</td>\
+                                            <td>' + item.author + '</td>\
+                                            <td>' + item.created + '</td>\
+                                            <td class="checkbox-using  zd-box">' + zdDom + '</td>\
+                                            <td>' + item.hits + '</td>\
+                                            <td>' + item.tag + '</td>\
+                                            <td class="checkbox-using chng-box">' + ztDom + '</td>\
+                                            <td class="td-manage">\
+                                                ' + isDelDom + '\
+                                            </td>\
+                                        </tr>';
+                });
+            } else {
+                strHtml += '<tr><td colspan="10" style="text-align:center">暂无数据</td></tr>';
+            }
+            $('#newsList').html(strHtml);
+            form.render();
+        }
+        $('#newsList').on('click', '.del-click', function() {
+            var self = $(this);
+            var id = self.parents('tr').attr('data-id');
+            member_del(this, id)
+        })
+
+
+        /*用户-删除*/
+        function member_del(obj, id) {
+            layer.confirm('确认要删除吗？', function(index) {
+                //发异步删除数据
+                $.post({
+                    url: '/admin/article/ardel',
+                    data: {
+                        id: id
+                    },
+                    success: function(res) {
+                        if (res.code == 1) {
+                            $(obj).parents("tr").remove();
+                            layer.msg('已删除!', {
+                                icon: 1,
+                                time: 1000
+                            });
+
+                        } else {
+                            layer.msg(res.msg, {
+                                icon: 1,
+                                time: 1000
+                            });
+                        }
+                    }
+                })
+
+            });
+        }
+
+        //是否发布
+        $('#newsList').on('click', '.chng-box', function() {
+
+                var self = $(this);
+                var isCheck = self.find('.check-item').prop('checked')
+
+                var id = self.parents('tr').attr('data-id');
+                changeUsing(id, isCheck);
+            })
+            //置顶操作
+        $('#newsList').on('click', '.zd-box', function() {
+
+            var self = $(this);
+            var isCheck = self.find('.zd-item').prop('checked')
+
+            var id = self.parents('tr').attr('data-id');
+            changeZd(id, isCheck);
+        })
+
+
+        function changeUsing(id, isCheck) {
+            $.post({
+                url: '/admin/article/changeshow',
+                data: {
+                    id: id,
+                    isCheck: isCheck
+                },
+                success: function(res) {
+                    if (res.code != 1) {
+                        layer.msg('发布失败', {
+                            icon: 2,
+                            time: 1000
+                        });
+                    }
+                }
+            })
+        }
+
+        function changeZd(id, isCheck) {
+            $.post({
+                url: '/admin/article/changezd',
+                data: {
+                    id: id,
+                    isCheck: isCheck
+                },
+                success: function(res) {
+                    if (res.code != 1) {
+                        layer.msg('修改失败', {
+                            icon: 2,
+                            time: 1000
+                        });
+                    }
+                }
+            })
+        }
+
+
+
+
+
+        function delAll(argument) {
+
+            var data = tableCheck.getData();
+
+            layer.confirm('确认要删除吗？' + data, function(index) {
+                //捉到所有被选中的，发异步进行删除
+                layer.msg('删除成功', {
+                    icon: 1
+                });
+                $(".layui-form-checked").not('.header').parents('tr').remove();
+            });
+        }
+    </script>
+</body>
+
+</html>

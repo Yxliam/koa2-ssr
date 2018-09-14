@@ -1,0 +1,75 @@
+ {{include './common/header.html'}}
+<style>
+    .mb0 {
+        margin-bottom: 10px;
+    }
+    
+    .mb20 {
+        margin-bottom: 20px;
+    }
+    
+    .pl0 {
+        padding-left: 0;
+    }
+    #doc-content{
+        color:#353535;
+    }
+    body{
+        font-weight: 600;
+    }
+</style>
+
+</head>
+
+<body>
+    <div id="fh5co-page">
+        {{include './common/nav.html'}}
+        <div id="fh5co-main">
+            <div class="fh5co-narrow-content">
+                <div class="row row-bottom-padded-md">
+
+                    <div class="col-md-12 animate-box" data-animate-effect="fadeInLeft">
+                        <h2 class="fh5co-heading mb0">{{ArticleInfo.title}}</h2>
+                        <div class="col-md-12 mb20 pl0">
+                            <span><small>作者：{{ArticleInfo.author}} </small> / <small>栏目：{{ArticleInfo.catename}} </small> /<small>发布时间：{{ArticleInfo.created}} </small> / <small> <i class="icon-comment"></i> 阅读数：{{ArticleInfo.hits}}</small></span>
+                        </div>
+
+                        <div id="doc-content">
+                            <textarea style="display: none;">{{ArticleInfo.content}}</textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+
+        </div>
+    </div>
+
+    {{include './common/footer.html'}}
+    <script src="/editor/lib/marked.min.js"></script>
+    <script src="/editor/lib/prettify.min.js"></script>
+    <script src="/editor/lib/raphael.min.js"></script>
+    <script src="/editor/lib/underscore.min.js"></script>
+    <script src="/editor/lib/sequence-diagram.min.js"></script>
+    <script src="/editor/lib/flowchart.min.js"></script>
+    <script src="/editor/lib/jquery.flowchart.min.js"></script>
+    <script src="/editor/editormd.min.js" type="text/javascript" charset="utf-8"></script>
+    <script type="text/javascript">
+        var testEditor;
+        $(function() {
+            testEditor = editormd.markdownToHTML("doc-content", { //注意：这里是上面DIV的id
+                htmlDecode: "style,script,iframe",
+                emoji: true,
+                taskList: true,
+                tex: true, // 默认不解析
+                flowChart: true, // 默认不解析
+                sequenceDiagram: true, // 默认不解析
+                codeFold: true
+            });
+        });
+    </script>
+
+</body>
+
+</html>

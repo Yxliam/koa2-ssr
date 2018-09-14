@@ -1,0 +1,62 @@
+{{include './header.html'}}
+</head>
+
+<body>
+    <div class="x-body">
+        <form class="layui-form">
+            <div class="layui-form-item">
+                <label for="username" class="layui-form-label">
+                  <span class="x-red">*</span>子栏目名称
+              </label>
+                <div class="layui-input-inline">
+                    <input type="hidden" value="{{id}}" name="id">
+                    <input type="text" id="CateName" name="catename" required="" lay-verify="required" autocomplete="off" value="" class="layui-input">
+                </div>
+                <div class="layui-form-mid layui-word-aux">
+                    <span class="x-red">*</span>子栏目名称不能重复
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label for="L_repass" class="layui-form-label">
+              </label>
+                <button class="layui-btn" lay-filter="add" lay-submit="">
+                  添加
+              </button>
+            </div>
+        </form>
+    </div>
+    <script>
+        layui.use(['form', 'layer'], function() {
+            $ = layui.jquery;
+            var form = layui.form,
+                layer = layui.layer;
+
+            //监听提交
+            form.on('submit(add)', function(data) {
+                $.post({
+                    url: '/admin/cate/docateadd',
+                    data: data.field,
+                    success: function(res) {
+                        if (res.code == 1) {
+                            layer.alert(res.msg, {
+                                icon: 6
+                            }, function() {
+                                parent.location.reload();
+                            });
+                        } else {
+                            layer.alert(res.msg, {
+                                icon: 5
+                            })
+                        }
+                    }
+                })
+
+                return false;
+            });
+
+
+        });
+    </script>
+</body>
+
+</html>

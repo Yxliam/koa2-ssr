@@ -1,0 +1,172 @@
+{{include './header.html'}}
+<link rel="stylesheet" href="/editor/css/editormd.min.css">
+<style>
+    .editormd {
+        margin: 0;
+    }
+</style>
+</head>
+
+<body>
+    <div class="x-body">
+        <form class="layui-form">
+            <div class="layui-form-item">
+                <label for="username" class="layui-form-label">
+                  <span class="x-red">*</span>文章标题
+              </label>
+                <div class="layui-input-inline">
+                    <input value="{{articleInfo.title}}" type="text" id="username" name="title" required="" lay-verify="required" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label for="username" class="layui-form-label">
+                  <span class="x-red">*</span>tag标签
+              </label>
+                <div class="layui-input-inline" style="width:400px">
+                    <input type="text" value="{{articleInfo.tag}}" id="username" name="tag" required="" lay-verify="required" autocomplete="off" class="layui-input">
+                </div>
+                <div class="layui-input-inline" style="vertical-align: middle;color:red;height:38px;
+                line-height: 38px;">
+                    多个tag用,(英文状态下)隔开
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label for="username" class="layui-form-label">
+                  <span class="x-red">*</span>文章分类
+              </label>
+                <div class="layui-input-inline">
+                    <select id="shipping" name="type" lay-verify="required" class="valid">
+                        {{each classList as item}}
+                            {{if item._id == articleInfo.type }}
+                            <option  value={{@item._id}}  selected >{{item.CateName}}</option>
+                            {{else}}
+                            <option  value={{@item._id}}  >{{item.CateName}}</option>
+                             {{/if}}
+                        {{/each}}
+                  </select>
+                </div>
+
+            </div>
+            <div class="layui-form-item">
+                <label for="username" class="layui-form-label">
+                      <span class="x-red">*</span>文章缩略图
+                  </label>
+                <div class="layui-input-inline">
+                    <button type="button" class="layui-btn" id="upload">
+                                    <i class="layui-icon">&#xe67c;</i>上传图片
+                            </button>
+                    <input type="hidden" id="j-img" name="image" value="">
+                </div>
+                <div class="layui-input-inline" id="uploadimg">
+                    <img src="{{articleInfo.image}}" alt="" width="100" height="100">
+                </div>
+            </div>
+
+            <div class="layui-form-item layui-form-text">
+                <label for="desc" class="layui-form-label">
+                  描述
+              </label>
+                <div class="layui-input-block">
+                    <textarea placeholder="请输入内容" id="desc" name="descript" class="layui-textarea">{{articleInfo.descript}}</textarea>
+                </div>
+            </div>
+            <div class="layui-form-item layui-form-text">
+                <label for="desc" class="layui-form-label">
+                      内容
+                  </label>
+                <div class="layui-input-block">
+                    <div id="my-editormd">
+                        <textarea id="my-editormd-markdown-doc" lay-verify="required" name="content" style="display:none;">{{articleInfo.content}}</textarea>
+                        <!-- 注意：name属性的值-->
+                        <textarea id="my-editormd-html-code" lay-verify="required" name="content" style="display:none;">{{articleInfo.content}}</textarea>
+                    </div>
+                </div>
+            </div>
+
+            <div class="layui-form-item">
+                <label for="L_repass" class="layui-form-label">
+                    <input type="hidden" value="{{@articleInfo._id}}" name="id">
+              </label>
+                <button class="layui-btn" lay-filter="add" lay-submit="">
+                  修改
+              </button>
+            </div>
+        </form>
+    </div>
+    <script>
+        layui.use(['form', 'layer', 'upload'], function() {
+            $ = layui.jquery;
+            var form = layui.form,
+                layer = layui.layer;
+            var upload = layui.upload;
+
+
+            var uploadInst = upload.render({
+                elem: '#upload' //绑定元素
+                    ,
+                url: '/admin/article/upload' //上传接口
+                    ,
+                done: function(res) {
+                    if (res.code == 1) {
+                        var _img = '<img width="100" height="100" src="/upload/' + res.filename + '" alt="">';
+                        $('#uploadimg').html(_img);
+                        $('#j-img').val('/upload/' + res.filename);
+                        //上传完毕回调
+                    }
+                },
+                error: function() {
+                    //请求异常回调
+                }
+            });
+
+
+            //监听提交
+            form.on('submit(add)', function(data) {
+                $.post({
+                    url: '/admin/article/edarticle',
+                    data: data.field,
+                    success: function(res) {
+                        if (res.code == 1) {
+                            //发异步，把数据提交给php
+                            layer.alert("修改成功", {
+                                icon: 6
+                            }, function() {
+                                //关闭当前frame
+                                parent.location.reload();
+                            });
+                        } else {
+                            layer.msg(res.mg, {
+                                icon: 2,
+                                time: 1000
+                            });
+                        }
+                    }
+                })
+
+                return false;
+            });
+
+
+        });
+    </script>
+    <script src="/editor/editormd.min.js"></script>
+    <script>
+        var editormdInt;
+        $(function() {
+            editormdInt = editormd("my-editormd", { //注意1：这里的就是上面的DIV的id属性值
+                width: "100%",
+                height: 640,
+                syncScrolling: "single",
+                path: "/editor/lib/", //注意2：你的路径
+                saveHTMLToTextarea: true, //注意3：这个配置，方便post提交表单
+                imageUpload: true,
+                imageFormats: ["jpg", "jpeg", "gif", "png", "bmp", "webp"],
+                imageUploadURL: "/upload/",
+            });
+        });
+    </script>
+
+
+</body>
+
+</html>
